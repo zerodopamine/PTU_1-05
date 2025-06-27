@@ -1,9 +1,9 @@
 import json
 import os
 
-pokemon = "Eevee"
-level = "32"
-all_moves = False
+pokemon = "Galvantula"
+level = "67"
+all_moves = True
 
 ''' DO NOT EDIT PAST THIS POINT'''
 def create_pokemon():
@@ -22,7 +22,7 @@ def create_pokemon():
     pokemon_data["Level"] = str(level)
 
     '''Load move data'''
-    with open(os.path.join(script_dir, 'moves.json'), 'r') as f:
+    with open(os.path.join(script_dir, 'moves.json'), 'r', encoding="utf8") as f:
         moves = json.load(f)
     move_levels = [int(x.split(" ")[0]) for x in pokemon_data["Moves"]]
     move_names = [" ".join(x.split(" ")[1:]) for x in pokemon_data["Moves"]]
@@ -49,7 +49,7 @@ def create_pokemon():
     pokemon_data.pop("Moves")
 
     '''Load ability data'''
-    with open(os.path.join(script_dir, 'abilities.json'), 'r') as f:
+    with open(os.path.join(script_dir, 'abilities.json'), 'r', encoding="utf8") as f:
         abilities = json.load(f)
     for ability_index, ability in enumerate(pokemon_data["Abilities"]):
         try: pokemon_data[f"Ability{ability_index+1}"] = abilities[f' {ability}']
