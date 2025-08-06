@@ -16,7 +16,7 @@ class extract_pokemon_data:
             "type2": "None",
             "Level": "1",
             "HeldItem": "None",
-            "Gender": "Male",
+            "Gender": "",
             "Nature": "",
             "height": "",
             "weight": "",
@@ -36,23 +36,23 @@ class extract_pokemon_data:
                 "HJ": 1,
                 "Power": 1
             },
-            "Athletics": 0,
-            "Acrobatics": 0,
-            "Charm": 0,
-            "Combat": 0,
-            "Command": 0,
-            "GeneralEducation": 0,
-            "MedicineEducation": 0,
-            "OccultEducation": 0,
-            "PokemonEducation": 0,
-            "TechnologyEducation": 0,
-            "Focus": 0,
-            "Guile": 0,
-            "Intimidate": 0,
-            "Intuition": 0,
-            "Perception": 0,
-            "Stealth": 0,
-            "Survival": 0,
+            "Athletics": 2,
+            "Acrobatics": 2,
+            "Charm": 2,
+            "Combat": 2,
+            "Command": 2,
+            "GeneralEducation": 2,
+            "MedicineEducation": 2,
+            "OccultEducation": 2,
+            "PokemonEducation": 2,
+            "TechnologyEducation": 2,
+            "Focus": 2,
+            "Guile": 2,
+            "Intimidate": 2,
+            "Intuition": 2,
+            "Perception": 2,
+            "Stealth": 2,
+            "Survival": 2,
             "Athletics_bonus": 0,
             "Acrobatics_bonus": 0,
             "Charm_bonus": 0,
@@ -117,16 +117,20 @@ class extract_pokemon_data:
         for line in self.data:
             # Base stats
             if "HP:"                in line : self.pokemon["base_HP"]    = self.split_by_colon(line)
-            elif "Attack:"          in line : self.pokemon["base_ATK"]   = self.split_by_colon(line)
-            elif "Defense:"         in line : self.pokemon["base_DEF"]   = self.split_by_colon(line)
             elif "Special Attack:"  in line : self.pokemon["base_SPATK"] = self.split_by_colon(line)
             elif "Special Defense:" in line : self.pokemon["base_SPDEF"] = self.split_by_colon(line)
+            elif "Attack:"          in line : self.pokemon["base_ATK"]   = self.split_by_colon(line)
+            elif "Defense:"         in line : self.pokemon["base_DEF"]   = self.split_by_colon(line)
             elif "Speed:"           in line : self.pokemon["base_SPEED"] = self.split_by_colon(line)
             # Size Information
             elif "Height :"         in line : self.pokemon["height"]     = self.split_by_colon(line)
-            elif "Weight :"         in line : self.pokemon["weight"]     = self.split_by_colon(line)
             # Abilities
             elif "Ability"          in line : self.pokemon["Abilities"].append(self.split_by_colon(line))
+            # Weight is separated into class and mass
+            elif "Weight :"         in line : 
+                weight_info = self.split_by_colon(line)
+                self.pokemon["weight"]     = weight_info[:weight_info.rfind(' ')]
+                self.pokemon["weightClass"]     = weight_info[weight_info.rfind(' ')+2:-1]
             #  Type
             elif "Type :"           in line :
                 ptype = self.split_by_colon(line)
@@ -235,6 +239,6 @@ with pdfplumber.open(r"/home/zero/pCloudDrive/Pokemon/PTU 1.05/Pokedex 1.05.pdf"
         pokedex = extract_pokemon_data(extracted_data)
         data[pokedex.pokemon["species"]] = pokedex.pokemon
 
-json_file = r"/home/zero/Documents/pokedex.json"
+json_file = r"/home/zero/Downloads/pokedex.json"
 with open(json_file, 'w') as f:
     json.dump(data, f, indent=2)
