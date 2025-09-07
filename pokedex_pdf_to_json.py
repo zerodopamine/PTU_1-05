@@ -71,7 +71,8 @@ class extract_pokemon_data:
             "Stealth_bonus": 0,
             "Survival_bonus": 0,
             "Abilities" : [],
-            "Moves" : []
+            "Moves" : [],
+            "Evolution" : 1
         }
         # At the very least add the name of the pokemon
         self.pokemon["species"] = self.data[0].strip()
@@ -138,6 +139,10 @@ class extract_pokemon_data:
                 else:
                     self.pokemon["type1"] = ptype.split("/")[0].strip()
                     self.pokemon["type2"] = ptype.split("/")[1].strip()
+            # If the pokemon is evolved get the level for evolution moves
+            elif (self.pokemon["species"].lower() in line.lower()) & ("minimum" in line.lower()):
+                level = re.findall(r'\d+', line)
+                if level: self.pokemon["Evolution"] = level[0]
             # Stop checking lines after size information
             elif "Breeding"         in line : break
 
@@ -203,6 +208,8 @@ class extract_pokemon_data:
         # Use regex to find number followed by space up to a dash
         parsed_moves = []
         for move in moves:
+            # Some of the pokedexes have Evolution moves, replace with level evolved at
+            if "Evo" in move: move = move.replace("Evo", f"{self.pokemon["Evolution"]}")
             try: parsed_moves.append(re.search(r'(\d+ .+?)-+\s', move).group(1).strip())
             # PDF is sometimes missing the move type just because...
             except AttributeError: parsed_moves.append(re.search(r'(\d+ .+)', move).group(1).strip())
@@ -232,13 +239,18 @@ def extract_pdf_page(pdf, page_number : int) -> list:
     data = data.split("\n")
     return data
 
+# Dex is 11, 744
+# Alola Dex is pages 3, 116
+# Galar is 2, 119
+# HisuiDex is 3, 29
+
 data = {}
-with pdfplumber.open(r"/home/zero/pCloudDrive/Pokemon/PTU 1.05/Pokedex 1.05.pdf") as pdf:
-    for page_number in range(11,744):
+with pdfplumber.open(r"/home/zero/pCloudDrive/Pokemon/PTU 1.05/HisuiDex.pdf") as pdf:
+    for page_number in range(3, 29):
         extracted_data = extract_pdf_page(pdf, page_number)
         pokedex = extract_pokemon_data(extracted_data)
         data[pokedex.pokemon["species"]] = pokedex.pokemon
 
-json_file = r"/home/zero/Downloads/pokedex.json"
+json_file = r"/home/zero/Downloads/HisuiDex.json"
 with open(json_file, 'w') as f:
     json.dump(data, f, indent=2)
