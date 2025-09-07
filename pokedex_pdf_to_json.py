@@ -112,28 +112,46 @@ class extract_pokemon_data:
         self.pokemon[skill] = int(string[string.rindex(" "):string.rindex("d")])
         if "+" in string:
             self.pokemon[f"{skill}_bonus"] = int(string[string.rindex("+")+1:])
-    
+
+    @staticmethod
+    def _search_for_string(string : str, line : str) -> bool:
+        '''Searches a string for a string pattern and returns True if present'''
+        pattern = f'{string}\\s?:'
+        result = re.search(pattern, line)
+        if result:
+            return True
+        else:
+            return False
+
+    def extract_stats(self, line) -> bool:
+        '''Extract the basic stats from the pokemon'''
+        base_stats = ["HP", "Special Attack", "Special Defense", "Attack", "Defense", "Speed"]
+        short_forms = ["HP","SPATK","SPDEF","ATK","DEF","SPEED"]
+        # Base stats
+        for base_index, base_stat in enumerate(base_stats):
+            if self._search_for_string(base_stat, line):
+                self.pokemon[f"base_{short_forms[base_index]}"] = self.split_by_colon(line)
+                return True
+        return False
+
     def extract_basic_data(self) -> None:
         ''' BASIC DATA'''
         for line in self.data:
-            # Base stats
-            if "HP:"                in line : self.pokemon["base_HP"]    = self.split_by_colon(line)
-            elif "Special Attack:"  in line : self.pokemon["base_SPATK"] = self.split_by_colon(line)
-            elif "Special Defense:" in line : self.pokemon["base_SPDEF"] = self.split_by_colon(line)
-            elif "Attack:"          in line : self.pokemon["base_ATK"]   = self.split_by_colon(line)
-            elif "Defense:"         in line : self.pokemon["base_DEF"]   = self.split_by_colon(line)
-            elif "Speed:"           in line : self.pokemon["base_SPEED"] = self.split_by_colon(line)
+            # Check for the pokemon's stats
+            if self.extract_stats(line): continue
             # Size Information
-            elif "Height :"         in line : self.pokemon["height"]     = self.split_by_colon(line)
+            elif self._search_for_string("Height", line): 
+                self.pokemon["height"] = self.split_by_colon(line)
             # Abilities
-            elif "Ability"          in line : self.pokemon["Abilities"].append(self.split_by_colon(line))
+            elif "Ability" in line:
+                self.pokemon["Abilities"].append(self.split_by_colon(line))
             # Weight is separated into class and mass
-            elif "Weight :"         in line : 
+            elif self._search_for_string("Weight", line):
                 weight_info = self.split_by_colon(line)
-                self.pokemon["weight"]     = weight_info[:weight_info.rfind(' ')]
-                self.pokemon["weightClass"]     = weight_info[weight_info.rfind(' ')+2:-1]
+                self.pokemon["weight"] = weight_info[:weight_info.rfind(' ')]
+                self.pokemon["weightClass"] = weight_info[weight_info.rfind(' ')+2:-1]
             #  Type
-            elif "Type :"           in line :
+            elif self._search_for_string("Type", line):
                 ptype = self.split_by_colon(line)
                 if " / " not in ptype : self.pokemon["type1"] = ptype
                 else:
@@ -144,7 +162,7 @@ class extract_pokemon_data:
                 level = re.findall(r'\d+', line)
                 if level: self.pokemon["Evolution"] = level[0]
             # Stop checking lines after size information
-            elif "Breeding"         in line : break
+            elif "Breeding" in line : break
 
     def extract_capability_list(self) -> None:
         ''' CAPABILITY LIST'''
@@ -239,18 +257,20 @@ def extract_pdf_page(pdf, page_number : int) -> list:
     data = data.split("\n")
     return data
 
-# Dex is 11, 744
-# Alola Dex is pages 3, 116
-# Galar is 2, 119
-# HisuiDex is 3, 29
+# Change filenames as needed
+# dexes = ["Pokedex 1.05","AlolaDex","GalarDex + Armor_Crown","HisuiDex"]
+# pages = [(11,744),(3,116),(2,119),(3,29)]
+dexes = ["AlolaDex","GalarDex + Armor_Crown","HisuiDex"]
+pages = [(3,116),(2,119),(3,29)]
 
 data = {}
-with pdfplumber.open(r"/home/zero/pCloudDrive/Pokemon/PTU 1.05/HisuiDex.pdf") as pdf:
-    for page_number in range(3, 29):
-        extracted_data = extract_pdf_page(pdf, page_number)
-        pokedex = extract_pokemon_data(extracted_data)
-        data[pokedex.pokemon["species"]] = pokedex.pokemon
+for dex_index, dex in enumerate(dexes):
+    with pdfplumber.open(f"/home/zero/pCloudDrive/Pokemon/PTU 1.05/{dex}.pdf") as pdf:
+        for page_number in range(pages[dex_index][0],pages[dex_index][1]):
+            extracted_data = extract_pdf_page(pdf, page_number)
+            pokedex = extract_pokemon_data(extracted_data)
+            data[pokedex.pokemon["species"]] = pokedex.pokemon
 
-json_file = r"/home/zero/Downloads/HisuiDex.json"
+json_file = r"/home/zero/Downloads/PokeDex2.json"
 with open(json_file, 'w') as f:
     json.dump(data, f, indent=2)

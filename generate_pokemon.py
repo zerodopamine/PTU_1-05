@@ -1,8 +1,8 @@
 import json
 import os
 
-pokemon = "Galvantula"
-level = "67"
+pokemon = "ambipom"
+level = "87"
 all_moves = True
 
 ''' DO NOT EDIT PAST THIS POINT'''
@@ -29,7 +29,7 @@ def create_pokemon():
     if not all_moves:
         below_target = [i for i in range(len(move_levels)) if move_levels[i] <= int(pokemon_data["Level"])][-6:]
     else:
-        below_target = [i for i in range(len(move_levels))]
+        below_target = [i for i in range(len(move_levels)) if move_levels[i] <= int(pokemon_data["Level"])]
     for move_index, index in enumerate(below_target):
         try: pokemon_data[f"Move{move_index}"] = moves[move_names[index]]
         except KeyError:
